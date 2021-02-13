@@ -52,6 +52,12 @@ jobs:
           cd package/lean
           rm -rf luci-theme-argon
           git clone -b 18.06 https://github.com/jerrykuku/luci-theme-argon.git
+          
+      - name: netdata
+        run: |
+          cd package/lean
+          rm -rf luci-app-netdata
+          git clone https://github.com/sirpdboy/luci-app-netdata.git
     
       - name: 关机键
         run: |
@@ -72,12 +78,12 @@ jobs:
 
           df -h
 
-      - name: Update feeds
+      - name: 更新feeds
         run: |
           ./scripts/feeds update -a
           ./scripts/feeds install -a
 
-      - name: Generate configuration file
+      - name: 生成配置文件
         run: |
           rm -f ./.config*
           touch ./.config
@@ -224,13 +230,13 @@ jobs:
           sed -i 's/^[ \t]*//g' ./.config
           make defconfig
 
-      - name: Make download
+      - name: 下载DL
         run: |
           make download -j8 || make download -j1 V=s
           rm -rf $(find ./dl/ -size -1024c)
           df -h
 
-      - name: Compile firmware
+      - name: 编译固件
         run: |
           make -j$(nproc) || make -j1 V=s
           echo "======================="
@@ -241,7 +247,7 @@ jobs:
           du -h ./ --max-depth=1
           du -h /mnt/openwrt/ --max-depth=1 || true
 
-      - name: Prepare artifact
+      - name: 编译准备
         run: |
           mkdir -p ./artifact/firmware
           mkdir -p ./artifact/package
@@ -251,25 +257,25 @@ jobs:
           cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
           cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
 
-      - name: Deliver buildinfo
+      - name: 准备制作
         uses: actions/upload-artifact@v2
         with:
           name: OpenWrt_buildinfo
           path: ./artifact/buildinfo/
 
-      - name: Deliver package
+      - name: 提交package
         uses: actions/upload-artifact@v2
         with:
           name: OpenWrt_package
           path: ./artifact/package/
 
-      - name: Deliver firmware
+      - name: 提交固件
         uses: actions/upload-artifact@v2
         with:
           name: OpenWrt_firmware
           path: ./bin/targets/
 
-      - name: Upload release asset
+      - name: 上传固件
         if: github.event == 'release'
         uses: svenstaro/upload-release-action@v2
         with:
